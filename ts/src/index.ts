@@ -1,9 +1,29 @@
 import * as program from 'commander';
 import { Routes, EndpointAccepters } from 'couchdb-dispatcher';
 import { readFileSync } from 'fs';
+import * as readline from 'readline';
 
 // Fonction de lecture du JSON
-function readJSON(filename: string) {
+async function readJSON(filename: string) {
+    async function readFromStdin() : Promise<string> {
+        const rl = readline.createInterface({
+            input: process.stdin,
+            terminal: false
+        });
+
+        let lines = "";
+
+        rl.on('line', line => {
+            lines += line;
+        });
+
+        return new Promise(resolve => {
+            rl.on('close', () => {
+                resolve(lines);
+            });
+        }) as Promise<string>;
+    }
+
     /*
      * json ressemble à
      * {
@@ -11,7 +31,12 @@ function readJSON(filename: string) {
      *  ...
      * }
      */
-    const json: { [regexp: string]: string } = JSON.parse(readFileSync(filename, { encoding: 'utf-8' }));
+
+    let str_base = !filename 
+    ? await readFromStdin()
+    : readFileSync(filename, { encoding: 'utf-8' });
+
+    const json: { [regexp: string]: string } = JSON.parse(str_base);
 
     // On construit des fonctions vérificatrices "Est-ce que la regex est valide pour la clé donnée ?"
     const fns: EndpointAccepters = {};
@@ -43,31 +68,39 @@ program
   .option('-d, --database <databaseUrl>', 'Database URL (without the port)', "http://localhost")
   .option('-p, --port <portNum>', 'Database port Number', parseInt, 5984)
   .option('-l, --listen <portNum>', 'Port Listening Number', parseInt, 3282)
-  .option('-f, --filename <fileName>', 'JSON describing RegExp to endpoints', '3letter_prefixe_rules.json')
+  .option('-f, --filename <fileName>', 'JSON describing RegExp to endpoints')
 .parse(process.argv);
 
 const DB = `${program.database}:${program.port}`;
 
-// Initialisation des routes possibles
-const route = new Routes(readJSON(program.filename), DB);
-
-route.set('GET', '/handshake', (_, res) => void res.json({ handshake: true }), () => undefined);
-
-// Route bulk_request standard
-route.set(
-    // Route /bulk_request, en méthode POST
-    'POST', '/bulk_request', 
-    // Récupération des clés: Attendues dans req.body.keys; Sinon, renvoie un bad request
-    (req, res) => req.body.keys ? req.body.keys : void res.status(400).json({ error: "Unwell-formed request" }), 
-    // Réponses renvoyées par CouchDB renvoyées dans request
-    (_, res, data) => res.json({ request: data }), 
-    // Si erreur
-    (_, res, error) => { 
-        console.log(error); 
-        res.status(500).json({ error: "Database error" }); 
+(async () => {
+    // Initialisation des routes possibles
+    let route: Routes;
+    try {
+        route = new Routes(await readJSON(program.filename), DB);
+    } catch (e) {
+        console.error("Error while parsing file.");
+        throw e;
     }
-);
 
-route.listen(program.listen, () => {
-    console.log(`Listening on port ${program.listen}.`);
-});
+    route.set('GET', '/handshake', (_, res) => void res.json({ handshake: true }), () => undefined);
+
+    // Route bulk_request standard
+    route.set(
+        // Route /bulk_request, en méthode POST
+        'POST', '/bulk_request', 
+        // Récupération des clés: Attendues dans req.body.keys; Sinon, renvoie un bad request
+        (req, res) => req.body.keys ? req.body.keys : void res.status(400).json({ error: "Unwell-formed request" }), 
+        // Réponses renvoyées par CouchDB renvoyées dans request
+        (_, res, data) => res.json({ request: data }), 
+        // Si erreur
+        (_, res, error) => { 
+            console.log(error); 
+            res.status(500).json({ error: "Database error" }); 
+        }
+    );
+
+    route.listen(program.listen, () => {
+        console.log(`Listening on port ${program.listen}.`);
+    });
+})();
