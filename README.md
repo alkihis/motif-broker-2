@@ -3,15 +3,18 @@ Front-end service to dispatch and aggregate motif requests on the list of couchD
 
 ### Running the service
 
-#### Options
-- `-f, --filename <endpointsJsonFile>`
-- `-d, --database <couchDBdatabaseURL>`
-- `-p, --port <couchDBdatabasePort>`
-- `-l, --listen <listenPortOfMotifBroker>`
+#### Options 
+- `-f, --filename <endpointsJsonFile>` (default, read from stdin)
+- `-d, --database <couchDBdatabaseURL>` (default http://localhost)
+- `-p, --port <couchDBdatabasePort>` (default 5984)
+- `-l, --listen <listenPortOfMotifBroker>` (default 3282)
 
 ```bash
 # For example
-node build/index.json -f endpoints.json -d http://localhost -p 5984 -l 3282
+node build/index.js -f endpoints.json -d http://localhost -p 5984 -l 3282
+
+# You can also specify a file / data from stdin
+node build/index.js < endpoints.json
 ```
 
 ### Querying the service
