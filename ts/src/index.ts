@@ -53,10 +53,10 @@ const route = new Routes(readJSON(program.filename), DB);
 
 route.set('GET', '/handshake', () => undefined, (_, res) => res.json({ handshake: true }));
 
-// Route bulk standard
+// Route bulk_request standard
 route.set(
-    // Route /bulk, en méthode POST
-    'POST', '/bulk', 
+    // Route /bulk_request, en méthode POST
+    'POST', '/bulk_request', 
     // Récupération des clés: Attendues dans req.body.keys; Sinon, renvoie un bad request
     (req, res) => req.body.keys ? req.body.keys : void res.status(400).json({ error: "Unwell-formed request" }), 
     // Réponses renvoyées par CouchDB renvoyées dans request
