@@ -51,7 +51,7 @@ const DB = `${program.database}:${program.port}`;
 // Initialisation des routes possibles
 const route = new Routes(readJSON(program.filename), DB);
 
-route.set('GET', '/handshake', () => undefined, (_, res) => res.json({ handshake: true }));
+route.set('GET', '/handshake', (_, res) => void res.json({ handshake: true }), () => undefined);
 
 // Route bulk_request standard
 route.set(
