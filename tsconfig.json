@@ -19,7 +19,8 @@
       },
       "preserveConstEnums" : true,
       "removeComments" : false,
-      "target": "ES6"
+      "target": "ES6",
+      "esModuleInterop": true
   },
   "files": [ // path to the files to compile
       "./ts/src/index.ts"

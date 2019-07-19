@@ -66,8 +66,8 @@ async function readJSON(filename: string) {
 program
   .version('0.1.0')
   .option('-d, --database <databaseUrl>', 'Database URL (without the port)', "http://localhost")
-  .option('-p, --port <portNum>', 'Database port Number', parseInt, 5984)
-  .option('-l, --listen <portNum>', 'Port Listening Number', parseInt, 3282)
+  .option('-p, --port <portNum>', 'Database port Number', Number, 5984)
+  .option('-l, --listen <portNum>', 'Port Listening Number', Number, 3282)
   .option('-f, --filename <fileName>', 'JSON describing RegExp to endpoints')
 .parse(process.argv);
 
@@ -83,22 +83,25 @@ const DB = `${program.database}:${program.port}`;
         throw e;
     }
 
-    route.set('GET', '/handshake', (_, res) => void res.json({ handshake: true }), () => undefined);
+    route.set({
+        method: 'GET',
+        route: '/handshake',
+        get_keys: (_, res) => void res.json({ handshake: true }),
+        post_data: undefined
+    });
 
-    // Route bulk_request standard
-    route.set(
-        // Route /bulk_request, en méthode POST
-        'POST', '/bulk_request', 
+    route.set({
+        method: 'POST',
+        route: '/bulk_request',
         // Récupération des clés: Attendues dans req.body.keys; Sinon, renvoie un bad request
-        (req, res) => req.body.keys ? req.body.keys : void res.status(400).json({ error: "Unwell-formed request" }), 
-        // Réponses renvoyées par CouchDB renvoyées dans request
-        (_, res, data) => res.json({ request: data }), 
+        get_keys: (req, res) => req.body.keys ? req.body.keys : void res.status(400).json({ error: "Unwell-formed request" }),
+        post_data: (_, res, data) => res.json({ request: data }), 
         // Si erreur
-        (_, res, error) => { 
+        on_error: (_, res, error) => { 
             console.log(error); 
             res.status(500).json({ error: "Database error" }); 
         }
-    );
+    });
 
     route.listen(program.listen, () => {
         console.log(`Listening on port ${program.listen}.`);
