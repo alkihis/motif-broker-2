@@ -105,6 +105,19 @@ const DB = `${program.database}:${program.port}`;
 
     route.set({
         method: 'POST',
+        route: '/taxon_db',
+        endpoint: 'taxon_db',
+        get_keys: (req, res) => req.body.keys ? req.body.keys : void res.status(400).json({ error: "Unwell-formed request" }),
+        post_data: (_, res, data) => res.json({ request: data }), 
+        // Si erreur
+        on_error: (_, res, error) => { 
+            console.log(error); 
+            res.status(500).json({ error: "Database error" }); 
+        }
+    });
+
+    route.set({
+        method: 'POST',
         route: '/bulk_request',
         // Récupération des clés: Attendues dans req.body.keys; Sinon, renvoie un bad request
         get_keys: (req, res) => req.body.keys ? req.body.keys : void res.status(400).json({ error: "Unwell-formed request" }),
