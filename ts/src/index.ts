@@ -49,7 +49,7 @@ async function readJSON(filename: string) {
 
         if (endpoint in fns) {
             // On sauvegarde la référence de l'ancienne fonction vérificatrice
-            const _old = fns[endpoint];
+            const _old = fns[endpoint] as Function;
 
             // La nouvelle fonction = Si la regex actuelle valide OU si l'ancienne fonction valide
             fns[endpoint] = (key: string) => obj_regex.test(key) || _old(key); 
