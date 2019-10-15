@@ -15,7 +15,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const program = __importStar(require("commander"));
+const commander_1 = require("commander");
 const couchdb_dispatcher_1 = require("couchdb-dispatcher");
 const fs_1 = require("fs");
 const readline = __importStar(require("readline"));
@@ -70,6 +70,7 @@ function readJSON(filename) {
         return fns;
     });
 }
+const program = new commander_1.Command();
 program
     .version('0.1.0')
     .option('-d, --database <databaseUrl>', 'Database URL (without the port)', "http://localhost")

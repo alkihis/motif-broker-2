@@ -1,4 +1,4 @@
-import * as program from 'commander';
+import { Command } from 'commander'; 
 import { Routes, EndpointAccepters } from 'couchdb-dispatcher';
 import { readFileSync } from 'fs';
 import * as readline from 'readline';
@@ -63,6 +63,7 @@ async function readJSON(filename: string) {
     return fns;
 }
 
+const program = new Command();
 program
   .version('0.1.0')
   .option('-d, --database <databaseUrl>', 'Database URL (without the port)', "http://localhost")
